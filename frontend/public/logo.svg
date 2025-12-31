@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 80">
+  <!-- Stylized Ethiopian traditional cart logo using flag colors -->
+  <rect width="300" height="80" rx="12" fill="transparent" />
+
+  <!-- cart body (yellow) -->
+  <path d="M30 30 h60 a6 6 0 0 1 6 6 v10 h-84 v-10 a6 6 0 0 1 6 -6 z" fill="#FFD700" />
+
+  <!-- cart roof/cover (green) -->
+  <path d="M36 24 q24 -12 48 0 v6 h-48 z" fill="#008000" />
+
+  <!-- wheel left (red) -->
+  <circle cx="40" cy="54" r="8" fill="#FF0000" />
+  <circle cx="40" cy="54" r="3" fill="#2D2D2D" />
+
+  <!-- wheel right (red) -->
+  <circle cx="80" cy="54" r="8" fill="#FF0000" />
+  <circle cx="80" cy="54" r="3" fill="#2D2D2D" />
+
+  <!-- brand name -->
+  <text x="110" y="48" font-family="Inter, Roboto, Arial" font-size="28" fill="#2D2D2D" font-weight="800">Zembile</text>
+</svg>

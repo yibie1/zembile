@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root{
+  --zembile-yellow: #FFD700;
+  --zembile-gray: #2D2D2D;
+}
+
+body{
+  @apply bg-white text-zinc-800;
+}
+
+/* TODO: refine spacing and typography */

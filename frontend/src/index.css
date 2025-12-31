@@ -2,13 +2,578 @@
 @tailwind components;
 @tailwind utilities;
 
-:root{
+:root {
   --zembile-yellow: #FFD700;
   --zembile-gray: #2D2D2D;
 }
 
-body{
-  @apply bg-white text-zinc-800;
+body {
+  @apply bg-gray-50 text-zinc-800 font-sans;
 }
 
-/* TODO: refine spacing and typography */
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400;
+}
+
+/* Price Range Slider Styling */
+.range-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  outline: none;
+  pointer-events: none;
+}
+
+.range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: #FFD700;
+  border: 2px solid #2D2D2D;
+  border-radius: 50%;
+  cursor: pointer;
+  pointer-events: all;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 3;
+}
+
+.range-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: #FFD700;
+  border: 2px solid #2D2D2D;
+  border-radius: 50%;
+  cursor: pointer;
+  pointer-events: all;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  -moz-appearance: none;
+}
+
+.range-slider::-webkit-slider-track {
+  background: transparent;
+  height: 8px;
+}
+
+.range-slider::-moz-range-track {
+  background: transparent;
+  height: 8px;
+  border: none;
+}
+
+/* Remove the old slider-thumb styles */
+.slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 8px;
+  background: linear-gradient(to right, #FFD700 0%, #FFD700 var(--range-progress, 0%), #e5e7eb var(--range-progress, 0%), #e5e7eb 100%);
+  border-radius: 4px;
+  outline: none;
+}
+
+.slider-thumb::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: #FFD700;
+  border: 2px solid #2D2D2D;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.slider-thumb::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: #FFD700;
+  border: 2px solid #2D2D2D;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Line clamp utilities */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+/* Custom animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse-soft {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.4s ease-out;
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Custom button styles */
+.btn-primary {
+  @apply bg-zembile-yellow text-zembile-gray px-6 py-3 rounded-full font-semibold hover:bg-yellow-400 transition-all duration-200 transform hover:scale-105 active:scale-95;
+}
+
+.btn-secondary {
+  @apply bg-zembile-gray text-white px-6 py-3 rounded-full font-semibold hover:bg-gray-800 transition-all duration-200 transform hover:scale-105 active:scale-95;
+}
+
+.btn-outline {
+  @apply border-2 border-zembile-gray text-zembile-gray px-6 py-3 rounded-full font-semibold hover:bg-zembile-gray hover:text-white transition-all duration-200;
+}
+
+/* Card hover effects */
+.card-hover {
+  @apply transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
+}
+
+/* Focus styles */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-zembile-yellow focus:ring-offset-2;
+}
+
+/* Ethiopian flag gradient */
+.ethiopian-gradient {
+  background: linear-gradient(to right, #008000 0%, #FFD700 50%, #FF0000 100%);
+}
+
+/* Custom shadows */
+.shadow-soft {
+  box-shadow: 0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04);
+}
+
+.shadow-glow {
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+}
+
+/* Loading states */
+.skeleton {
+  @apply bg-gray-200 animate-pulse rounded;
+}
+
+.skeleton-text {
+  @apply skeleton h-4 w-full mb-2;
+}
+
+.skeleton-title {
+  @apply skeleton h-6 w-3/4 mb-4;
+}
+
+.skeleton-image {
+  @apply skeleton w-full h-48;
+}
+
+/* Responsive text sizes */
+.text-responsive-xl {
+  @apply text-2xl md:text-3xl lg:text-4xl;
+}
+
+.text-responsive-lg {
+  @apply text-xl md:text-2xl lg:text-3xl;
+}
+
+.text-responsive-md {
+  @apply text-lg md:text-xl lg:text-2xl;
+}
+
+/* Grid responsive */
+.grid-responsive {
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6;
+}
+
+.grid-responsive-2 {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-6;
+}
+
+.grid-responsive-3 {
+  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6;
+}
+
+/* Custom spacing */
+.section-padding {
+  @apply py-12 md:py-16 lg:py-20;
+}
+
+.container-padding {
+  @apply px-4 md:px-6 lg:px-8;
+}
+
+/* Ethiopian cultural elements */
+.pattern-traditional {
+  background-image: 
+    radial-gradient(circle at 25% 25%, rgba(255, 215, 0, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(0, 128, 0, 0.1) 0%, transparent 50%);
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  body {
+    @apply text-black bg-white;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .btn-primary {
+    @apply border-2 border-black;
+  }
+  
+  .btn-secondary {
+    @apply border-2 border-white;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Dark mode support (future enhancement) */
+@media (prefers-color-scheme: dark) {
+  /* Dark mode styles can be added here in the future */
+}
+
+/* Custom form styles */
+.form-input {
+  @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-zembile-yellow focus:border-transparent transition-colors;
+}
+
+.form-label {
+  @apply block text-sm font-medium text-gray-700 mb-2;
+}
+
+.form-error {
+  @apply text-red-600 text-sm mt-1;
+}
+
+/* Badge styles */
+.badge {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+.badge-success {
+  @apply badge bg-green-100 text-green-800;
+}
+
+.badge-warning {
+  @apply badge bg-yellow-100 text-yellow-800;
+}
+
+.badge-error {
+  @apply badge bg-red-100 text-red-800;
+}
+
+.badge-info {
+  @apply badge bg-blue-100 text-blue-800;
+}
+
+/* Toast notification styles */
+.toast {
+  @apply fixed top-4 right-4 z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-4 max-w-sm transform transition-all duration-300;
+}
+
+.toast-success {
+  @apply toast border-green-200 bg-green-50;
+}
+
+.toast-error {
+  @apply toast border-red-200 bg-red-50;
+}
+
+.toast-warning {
+  @apply toast border-yellow-200 bg-yellow-50;
+}
+
+/* Loading spinner */
+.spinner {
+  @apply inline-block w-4 h-4 border-2 border-gray-300 border-t-zembile-yellow rounded-full animate-spin;
+}
+
+.spinner-lg {
+  @apply w-8 h-8 border-4;
+}
+
+/* Filter sidebar animations */
+.filter-section {
+  @apply transition-all duration-200 ease-in-out;
+}
+
+.filter-section:hover {
+  @apply bg-gray-50 rounded-lg;
+}
+
+/* Product grid animations */
+.product-enter {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.product-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms, transform 300ms;
+}
+
+/* Pagination styles */
+.pagination-button {
+  @apply px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors;
+}
+
+.pagination-button.active {
+  @apply bg-zembile-yellow text-zembile-gray border-zembile-yellow;
+}
+
+.pagination-button:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+/* Mobile filter overlay */
+.mobile-filter-overlay {
+  @apply fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden;
+}
+
+.mobile-filter-panel {
+  @apply fixed inset-y-0 left-0 w-80 bg-white shadow-xl z-50 transform transition-transform duration-300 ease-in-out lg:hidden;
+}
+
+.mobile-filter-panel.closed {
+  @apply -translate-x-full;
+}
+
+/* View mode transition */
+.view-transition {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+/* Sticky filter sidebar */
+.sticky-filters {
+  position: sticky;
+  top: 1.5rem;
+  max-height: calc(100vh - 3rem);
+  overflow-y: auto;
+}
+
+/* Product Detail Page Styles */
+.product-image-modal {
+  backdrop-filter: blur(4px);
+}
+
+.product-tab-content {
+  min-height: 200px;
+}
+
+.product-thumbnail {
+  transition: all 0.2s ease-in-out;
+}
+
+.product-thumbnail:hover {
+  transform: scale(1.05);
+}
+
+.product-thumbnail.active {
+  box-shadow: 0 0 0 2px var(--zembile-yellow);
+}
+
+.quantity-selector button {
+  transition: all 0.2s ease-in-out;
+}
+
+.quantity-selector button:hover {
+  background-color: #f3f4f6;
+  transform: scale(1.1);
+}
+
+.size-selector button {
+  transition: all 0.2s ease-in-out;
+}
+
+.size-selector button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.wishlist-button {
+  transition: all 0.3s ease-in-out;
+}
+
+.wishlist-button:hover {
+  transform: scale(1.05);
+}
+
+.product-action-button {
+  transition: all 0.2s ease-in-out;
+}
+
+.product-action-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.product-action-button:active {
+  transform: translateY(0);
+}
+
+/* Image zoom cursor */
+.cursor-zoom-in {
+  cursor: zoom-in;
+}
+
+/* Review stars animation */
+.review-stars svg {
+  transition: color 0.2s ease-in-out;
+}
+
+/* Tab navigation */
+.tab-nav-item {
+  position: relative;
+  transition: all 0.2s ease-in-out;
+}
+
+.tab-nav-item::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: var(--zembile-yellow);
+  transition: width 0.3s ease-in-out;
+}
+
+.tab-nav-item.active::after {
+  width: 100%;
+}
+
+/* Shipping info icons */
+.shipping-info-icon {
+  flex-shrink: 0;
+}
+
+/* Similar products section */
+.similar-products-grid {
+  scroll-behavior: smooth;
+}
+
+/* Product detail skeleton animations */
+.product-detail-skeleton .animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Responsive image gallery */
+@media (max-width: 768px) {
+  .product-image-gallery {
+    margin-bottom: 2rem;
+  }
+  
+  .product-thumbnails {
+    justify-content: center;
+  }
+  
+  .product-info {
+    padding: 0 1rem;
+  }
+}
+
+/* High contrast mode for product details */
+@media (prefers-contrast: high) {
+  .product-price {
+    font-weight: 900;
+  }
+  
+  .stock-indicator {
+    border: 2px solid currentColor;
+  }
+  
+  .product-feature-tag {
+    border: 1px solid currentColor;
+  }
+}
+
+/* Print styles for product details */
+@media print {
+  .product-action-buttons,
+  .product-image-navigation,
+  .similar-products {
+    display: none !important;
+  }
+  
+  .product-image-gallery {
+    break-inside: avoid;
+  }
+  
+  .product-tabs {
+    break-inside: avoid;
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "name": "zembile-marketplace",
+  "version": "1.0.0",
+  "description": "Ethiopian E-commerce Marketplace - Authentic Ethiopian products with modern shopping experience",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:api\" \"npm run dev:frontend\"",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:api": "cd api && npm run dev",
+    "build": "cd frontend && npm run build",
+    "start": "cd api && npm start",
+    "install:all": "npm install && cd frontend && npm install && cd ../api && npm install",
+    "clean": "rm -rf node_modules frontend/node_modules api/node_modules",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/zembile.git"
+  },
+  "keywords": [
+    "ecommerce",
+    "marketplace",
+    "ethiopian",
+    "react",
+    "nodejs",
+    "chapa",
+    "payment",
+    "shopping",
+    "cart",
+    "authentication"
+  ],
+  "author": "Zembile Team",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/yourusername/zembile/issues"
+  },
+  "homepage": "https://github.com/yourusername/zembile#readme",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
+}

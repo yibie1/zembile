@@ -1,21 +1,103 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 80">
-  <!-- Stylized Ethiopian traditional cart logo using flag colors -->
-  <rect width="300" height="80" rx="12" fill="transparent" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80">
+  <defs>
+    <!-- Basket weave gradient -->
+    <linearGradient id="basketWeave" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#DEB887;stop-opacity:1" />
+      <stop offset="30%" style="stop-color:#D2B48C;stop-opacity:1" />
+      <stop offset="70%" style="stop-color:#BC9A6A;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#A0826D;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Ethiopian flag gradient -->
+    <linearGradient id="flagGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#228B22;stop-opacity:1" />
+      <stop offset="33%" style="stop-color:#FFD700;stop-opacity:1" />
+      <stop offset="66%" style="stop-color:#DC143C;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#228B22;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Text gradient -->
+    <linearGradient id="textGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#2D2D2D;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1A1A1A;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Basket shadow -->
+    <filter id="basketShadow">
+      <feDropShadow dx="2" dy="3" stdDeviation="2" flood-opacity="0.2"/>
+    </filter>
+  </defs>
 
-  <!-- cart body (yellow) -->
-  <path d="M30 30 h60 a6 6 0 0 1 6 6 v10 h-84 v-10 a6 6 0 0 1 6 -6 z" fill="#FFD700" />
+  <!-- Traditional Ethiopian Zembile basket -->
+  <g transform="translate(5, 8)" filter="url(#basketShadow)">
+    <!-- Basket main body (handbag shape) -->
+    <path d="M15 25 C15 18, 22 15, 35 15 C48 15, 55 18, 55 25 L52 48 C52 53, 47 55, 35 55 C23 55, 18 53, 18 48 Z" 
+          fill="url(#basketWeave)" stroke="#8B4513" stroke-width="1.2"/>
+    
+    <!-- Detailed weaving pattern -->
+    <g stroke="#654321" stroke-width="0.6" fill="none" opacity="0.8">
+      <!-- Horizontal weave -->
+      <path d="M20 20 L50 20 M21 25 L49 25 M22 30 L48 30 M23 35 L47 35 M24 40 L46 40 M25 45 L45 45 M26 50 L44 50"/>
+      <!-- Vertical weave -->
+      <path d="M25 18 L27 52 M30 18 L32 52 M35 18 L37 52 M40 18 L42 52 M45 18 L47 52"/>
+      <!-- Diagonal weave for authenticity -->
+      <path d="M20 22 L25 27 M25 22 L30 27 M30 22 L35 27 M35 22 L40 27 M40 22 L45 27 M45 22 L50 27"/>
+      <path d="M20 32 L25 37 M25 32 L30 37 M30 32 L35 37 M35 32 L40 37 M40 32 L45 37 M45 32 L50 37"/>
+    </g>
+    
+    <!-- Ethiopian flag colors as decorative band -->
+    <rect x="18" y="12" width="34" height="2.5" fill="#228B22" rx="1"/>
+    <rect x="18" y="9.5" width="34" height="2.5" fill="#FFD700" rx="1"/>
+    <rect x="18" y="7" width="34" height="2.5" fill="#DC143C" rx="1"/>
+    
+    <!-- Traditional basket handles (like handbag straps) -->
+    <path d="M22 20 C18 15, 18 10, 22 8 C26 10, 26 15, 22 20" 
+          fill="none" stroke="#8B4513" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M48 20 C52 15, 52 10, 48 8 C44 10, 44 15, 48 20" 
+          fill="none" stroke="#8B4513" stroke-width="2.5" stroke-linecap="round"/>
+    
+    <!-- Ethiopian star symbol (subtle) -->
+    <g transform="translate(35,32)" opacity="0.4">
+      <path d="M0,-4 L1.2,-1.2 L4,0 L1.2,1.2 L0,4 L-1.2,1.2 L-4,0 L-1.2,-1.2 Z" 
+            fill="#FFD700" stroke="#228B22" stroke-width="0.3"/>
+    </g>
+    
+    <!-- Basket rim highlight -->
+    <ellipse cx="35" cy="16" rx="18" ry="2" fill="#FFFFFF" opacity="0.3"/>
+    
+    <!-- Bottom shadow -->
+    <ellipse cx="35" cy="55" rx="15" ry="2" fill="#000000" opacity="0.15"/>
+  </g>
 
-  <!-- cart roof/cover (green) -->
-  <path d="M36 24 q24 -12 48 0 v6 h-48 z" fill="#008000" />
-
-  <!-- wheel left (red) -->
-  <circle cx="40" cy="54" r="8" fill="#FF0000" />
-  <circle cx="40" cy="54" r="3" fill="#2D2D2D" />
-
-  <!-- wheel right (red) -->
-  <circle cx="80" cy="54" r="8" fill="#FF0000" />
-  <circle cx="80" cy="54" r="3" fill="#2D2D2D" />
-
-  <!-- brand name -->
-  <text x="110" y="48" font-family="Inter, Roboto, Arial" font-size="28" fill="#2D2D2D" font-weight="800">Zembile</text>
+  <!-- Brand name with Ethiopian-inspired typography -->
+  <g transform="translate(85, 0)">
+    <!-- Main brand name -->
+    <text x="0" y="32" font-family="Inter, system-ui, sans-serif" font-size="26" fill="url(#textGradient)" font-weight="800" letter-spacing="-0.8px">
+      Zembile
+    </text>
+    
+    <!-- Amharic text (ዘምቢል) -->
+    <text x="0" y="48" font-family="system-ui, sans-serif" font-size="12" fill="#666666" font-weight="400" letter-spacing="1px">
+      ዘምቢል
+    </text>
+    
+    <!-- Tagline -->
+    <text x="0" y="60" font-family="Inter, system-ui, sans-serif" font-size="9" fill="#888888" font-weight="500" letter-spacing="1.2px">
+      ETHIOPIAN MARKETPLACE
+    </text>
+  </g>
+  
+  <!-- Decorative Ethiopian elements -->
+  <g transform="translate(260, 10)">
+    <!-- Ethiopian cross pattern -->
+    <g opacity="0.6">
+      <circle cx="10" cy="10" r="1.5" fill="#228B22"/>
+      <circle cx="20" cy="15" r="1.2" fill="#FFD700"/>
+      <circle cx="30" cy="20" r="1" fill="#DC143C"/>
+      <circle cx="40" cy="12" r="0.8" fill="#228B22"/>
+    </g>
+    
+    <!-- Traditional pattern -->
+    <path d="M5 25 L15 30 L25 25 L35 30 L45 25" stroke="url(#flagGradient)" stroke-width="1.5" fill="none" opacity="0.5"/>
+  </g>
 </svg>

@@ -1,8 +1,73 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <!-- Small favicon: simplified cart + flag colors -->
-  <rect width="100" height="100" rx="16" fill="#ffffff" />
-  <path d="M18 42 h46 a4 4 0 0 1 4 4 v6 h-54 v-6 a4 4 0 0 1 4 -4 z" fill="#FFD700" />
-  <path d="M22 36 q14 -7 28 0 v4 h-28 z" fill="#008000" />
-  <circle cx="32" cy="66" r="6" fill="#FF0000" />
-  <circle cx="58" cy="66" r="6" fill="#FF0000" />
+  <defs>
+    <!-- Basket weave gradient -->
+    <linearGradient id="basketWeave" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#DEB887;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#D2B48C;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#BC9A6A;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Background gradient -->
+    <radialGradient id="bgGradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F8F9FA;stop-opacity:1" />
+    </radialGradient>
+    
+    <!-- Shadow filter -->
+    <filter id="shadow">
+      <feDropShadow dx="1" dy="2" stdDeviation="1.5" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+
+  <!-- Background with rounded corners -->
+  <rect width="100" height="100" rx="22" fill="url(#bgGradient)" stroke="#E5E7EB" stroke-width="1"/>
+  
+  <!-- Ethiopian Zembile basket -->
+  <g transform="translate(50, 50)" filter="url(#shadow)">
+    <!-- Basket main body (handbag shape) -->
+    <path d="M-22 -8 C-22 -18, -15 -22, 0 -22 C15 -22, 22 -18, 22 -8 L20 18 C20 23, 15 25, 0 25 C-15 25, -20 23, -20 18 Z" 
+          fill="url(#basketWeave)" stroke="#8B4513" stroke-width="1.5"/>
+    
+    <!-- Detailed weaving pattern -->
+    <g stroke="#654321" stroke-width="0.8" fill="none" opacity="0.8">
+      <!-- Horizontal weave -->
+      <path d="M-18 -15 L18 -15 M-17 -10 L17 -10 M-16 -5 L16 -5 M-15 0 L15 0 M-14 5 L14 5 M-13 10 L13 10 M-12 15 L12 15 M-11 20 L11 20"/>
+      <!-- Vertical weave -->
+      <path d="M-10 -20 L-8 22 M-3 -20 L-1 22 M4 -20 L6 22 M11 -20 L13 22"/>
+      <!-- Diagonal pattern for authenticity -->
+      <path d="M-15 -12 L-10 -7 M-10 -12 L-5 -7 M-5 -12 L0 -7 M0 -12 L5 -7 M5 -12 L10 -7 M10 -12 L15 -7"/>
+      <path d="M-15 2 L-10 7 M-10 2 L-5 7 M-5 2 L0 7 M0 2 L5 7 M5 2 L10 7 M10 2 L15 7"/>
+    </g>
+    
+    <!-- Ethiopian flag colors as decorative band -->
+    <rect x="-20" y="-28" width="40" height="3" fill="#228B22" rx="1.5"/>
+    <rect x="-20" y="-31" width="40" height="3" fill="#FFD700" rx="1.5"/>
+    <rect x="-20" y="-34" width="40" height="3" fill="#DC143C" rx="1.5"/>
+    
+    <!-- Traditional basket handles (handbag style) -->
+    <path d="M-15 -12 C-20 -18, -20 -25, -15 -28 C-10 -25, -10 -18, -15 -12" 
+          fill="none" stroke="#8B4513" stroke-width="3" stroke-linecap="round"/>
+    <path d="M15 -12 C20 -18, 20 -25, 15 -28 C10 -25, 10 -18, 15 -12" 
+          fill="none" stroke="#8B4513" stroke-width="3" stroke-linecap="round"/>
+    
+    <!-- Ethiopian star symbol (very subtle) -->
+    <g opacity="0.3">
+      <path d="M0,-6 L1.8,-1.8 L6,0 L1.8,1.8 L0,6 L-1.8,1.8 L-6,0 L-1.8,-1.8 Z" 
+            fill="#FFD700" stroke="#228B22" stroke-width="0.4"/>
+    </g>
+    
+    <!-- Basket rim highlight -->
+    <ellipse cx="0" cy="-20" rx="20" ry="3" fill="#FFFFFF" opacity="0.4"/>
+    
+    <!-- Bottom shadow -->
+    <ellipse cx="0" cy="25" rx="18" ry="3" fill="#000000" opacity="0.15"/>
+  </g>
+  
+  <!-- Corner decorative elements with Ethiopian colors -->
+  <g opacity="0.6">
+    <circle cx="15" cy="15" r="1.5" fill="#228B22"/>
+    <circle cx="85" cy="15" r="1.2" fill="#FFD700"/>
+    <circle cx="85" cy="85" r="1" fill="#DC143C"/>
+    <circle cx="15" cy="85" r="0.8" fill="#228B22"/>
+  </g>
 </svg>

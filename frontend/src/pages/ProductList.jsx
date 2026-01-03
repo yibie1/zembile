@@ -1,7 +1,15 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import ProductCard from '../components/ProductCard'
-import { products as allProducts, categories, brands, searchProducts } from '../data/products'
+import { 
+  products as allProducts, 
+  categories, 
+  brands, 
+  searchProducts,
+  getSubcategoriesByCategory,
+  getCategoryById,
+  getSubcategoryById
+} from '../data/products'
 
 export default function ProductList() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -11,6 +19,10 @@ export default function ProductList() {
   const [selectedCategories, setSelectedCategories] = useState(
     searchParams.get('category') ? [searchParams.get('category')] : []
   )
+  const [selectedSubcategories, setSelectedSubcategories] = useState(
+    searchParams.get('subcategory') ? [searchParams.get('subcategory')] : []
+  )
+  const [expandedCategories, setExpandedCategories] = useState([]) // New state for expanded categories
   const [selectedBrands, setSelectedBrands] = useState([])
   const [priceRange, setPriceRange] = useState([0, 5000])
   const [selectedRating, setSelectedRating] = useState(0)
@@ -49,6 +61,11 @@ export default function ProductList() {
     // Category filter
     if (selectedCategories.length > 0) {
       filtered = filtered.filter(p => selectedCategories.includes(p.category))
+    }
+
+    // Subcategory filter
+    if (selectedSubcategories.length > 0) {
+      filtered = filtered.filter(p => selectedSubcategories.includes(p.subcategory))
     }
 
     // Brand filter
@@ -97,7 +114,7 @@ export default function ProductList() {
     })
 
     return filtered
-  }, [query, selectedCategories, selectedBrands, priceRange, selectedRating, inStockOnly, onSaleOnly, sort])
+  }, [query, selectedCategories, selectedSubcategories, selectedBrands, priceRange, selectedRating, inStockOnly, onSaleOnly, sort])
 
   // Pagination
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage)
@@ -109,7 +126,7 @@ export default function ProductList() {
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1)
-  }, [query, selectedCategories, selectedBrands, priceRange, selectedRating, inStockOnly, onSaleOnly, sort])
+  }, [query, selectedCategories, selectedSubcategories, selectedBrands, priceRange, selectedRating, inStockOnly, onSaleOnly, sort])
 
   // Helper functions
   const toggleCategory = (categoryId) => {
@@ -117,6 +134,26 @@ export default function ProductList() {
       prev.includes(categoryId) 
         ? prev.filter(c => c !== categoryId)
         : [...prev, categoryId]
+    )
+    // Clear subcategories when category is deselected
+    if (selectedCategories.includes(categoryId)) {
+      setSelectedSubcategories([])
+    }
+  }
+
+  const toggleCategoryExpansion = (categoryId) => {
+    setExpandedCategories(prev => 
+      prev.includes(categoryId)
+        ? prev.filter(c => c !== categoryId)
+        : [...prev, categoryId]
+    )
+  }
+
+  const toggleSubcategory = (subcategoryId) => {
+    setSelectedSubcategories(prev => 
+      prev.includes(subcategoryId) 
+        ? prev.filter(s => s !== subcategoryId)
+        : [...prev, subcategoryId]
     )
   }
 
@@ -131,6 +168,8 @@ export default function ProductList() {
   const clearAllFilters = () => {
     setQuery('')
     setSelectedCategories([])
+    setSelectedSubcategories([])
+    setExpandedCategories([])
     setSelectedBrands([])
     setPriceRange([priceStats.min, priceStats.max])
     setSelectedRating(0)
@@ -167,8 +206,16 @@ export default function ProductList() {
               <>
                 <span className="mx-2">/</span>
                 <span className="text-gray-900 font-medium">
-                  {categories.find(c => c.id === selectedCategories[0])?.name}
+                  {getCategoryById(selectedCategories[0])?.name}
                 </span>
+                {selectedSubcategories.length === 1 && (
+                  <>
+                    <span className="mx-2">/</span>
+                    <span className="text-gray-900 font-medium">
+                      {getSubcategoryById(selectedCategories[0], selectedSubcategories[0])?.name}
+                    </span>
+                  </>
+                )}
               </>
             )}
           </nav>
@@ -207,25 +254,140 @@ export default function ProductList() {
                 </div>
               </div>
 
-              {/* Categories */}
+              {/* Quick Filters - Popular Subcategories */}
+              <div className="mb-6">
+                <h4 className="text-sm font-medium text-gray-900 mb-3">Quick Filters</h4>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { id: 'single-origin', name: 'Single Origin Coffee', category: 'coffee' },
+                    { id: 'spices-seasonings', name: 'Spices & Seasonings', category: 'food' },
+                    { id: 'traditional-clothing', name: 'Traditional Clothing', category: 'fashion' },
+                    { id: 'baskets-storage', name: 'Baskets & Storage', category: 'home' },
+                    { id: 'skincare', name: 'Skincare', category: 'beauty' },
+                    { id: 'pottery-ceramics', name: 'Pottery & Ceramics', category: 'crafts' }
+                  ].map(quickFilter => {
+                    const count = allProducts.filter(p => p.subcategory === quickFilter.id).length
+                    if (count === 0) return null
+                    
+                    const isSelected = selectedSubcategories.includes(quickFilter.id)
+                    
+                    return (
+                      <button
+                        key={quickFilter.id}
+                        onClick={() => {
+                          // Auto-select parent category if not selected
+                          if (!selectedCategories.includes(quickFilter.category)) {
+                            toggleCategory(quickFilter.category)
+                          }
+                          toggleSubcategory(quickFilter.id)
+                        }}
+                        className={`px-3 py-1 text-xs rounded-full border transition-colors ${
+                          isSelected
+                            ? 'bg-zembile-yellow text-zembile-gray border-zembile-yellow'
+                            : 'bg-white text-gray-600 border-gray-300 hover:border-zembile-yellow hover:text-zembile-gray'
+                        }`}
+                      >
+                        {quickFilter.name} ({count})
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Categories with Subcategories */}
               <div className="mb-6">
                 <h4 className="text-sm font-medium text-gray-900 mb-3">Categories</h4>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {categories.map(category => {
-                    const count = allProducts.filter(p => p.category === category.id).length
+                    const categoryCount = allProducts.filter(p => p.category === category.id).length
+                    const isCategorySelected = selectedCategories.includes(category.id)
+                    const isCategoryExpanded = expandedCategories.includes(category.id)
+                    
                     return (
-                      <label key={category.id} className="flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={selectedCategories.includes(category.id)}
-                          onChange={() => toggleCategory(category.id)}
-                          className="rounded border-gray-300 text-zembile-yellow focus:ring-zembile-yellow"
-                        />
-                        <span className="ml-3 text-sm text-gray-700 flex-1">
-                          {category.icon} {category.name}
-                        </span>
-                        <span className="text-xs text-gray-500">({count})</span>
-                      </label>
+                      <div key={category.id} className="border border-gray-100 rounded-lg overflow-hidden">
+                        {/* Main Category */}
+                        <div className="flex items-center p-3 hover:bg-gray-50 transition-colors">
+                          <label className="flex items-center cursor-pointer flex-1">
+                            <input
+                              type="checkbox"
+                              checked={isCategorySelected}
+                              onChange={() => toggleCategory(category.id)}
+                              className="rounded border-gray-300 text-zembile-yellow focus:ring-zembile-yellow"
+                            />
+                            <span className="ml-3 text-sm text-gray-700 flex-1 flex items-center gap-2">
+                              <span className="text-lg">{category.icon}</span>
+                              <span className="font-medium">{category.name}</span>
+                            </span>
+                            <span className="text-xs text-gray-500">({categoryCount})</span>
+                          </label>
+                          
+                          {/* Expand/Collapse Button */}
+                          <button
+                            onClick={() => toggleCategoryExpansion(category.id)}
+                            className="ml-2 p-1 hover:bg-gray-200 rounded transition-colors"
+                          >
+                            <svg 
+                              className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
+                                isCategoryExpanded ? 'rotate-180' : ''
+                              }`} 
+                              fill="none" 
+                              viewBox="0 0 24 24" 
+                              stroke="currentColor"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </button>
+                        </div>
+
+                        {/* Subcategories - Show when expanded */}
+                        {isCategoryExpanded && (
+                          <div className="bg-gray-50 border-t border-gray-100 transition-all duration-300 ease-in-out">
+                            <div className="p-2 space-y-1">
+                              {category.subcategories.map((subcategory) => {
+                                const subcategoryCount = allProducts.filter(p => 
+                                  p.category === category.id && p.subcategory === subcategory.id
+                                ).length
+                                
+                                if (subcategoryCount === 0) return null
+                                
+                                const isSubcategorySelected = selectedSubcategories.includes(subcategory.id)
+                                
+                                return (
+                                  <label 
+                                    key={`${category.id}-${subcategory.id}`} 
+                                    className={`flex items-center cursor-pointer px-3 py-2 rounded transition-colors ${
+                                      isCategorySelected 
+                                        ? 'hover:bg-white' 
+                                        : 'hover:bg-gray-100 opacity-75'
+                                    }`}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={isSubcategorySelected}
+                                      onChange={() => toggleSubcategory(subcategory.id)}
+                                      disabled={!isCategorySelected}
+                                      className={`rounded border-gray-300 text-zembile-yellow focus:ring-zembile-yellow ${
+                                        !isCategorySelected ? 'opacity-50' : ''
+                                      }`}
+                                    />
+                                    <div className="ml-3 flex-1">
+                                      <div className={`text-sm ${
+                                        isCategorySelected ? 'text-gray-800' : 'text-gray-500'
+                                      }`}>
+                                        {subcategory.name}
+                                      </div>
+                                      <div className="text-xs text-gray-500">
+                                        {subcategory.description}
+                                      </div>
+                                    </div>
+                                    <span className="text-xs text-gray-500">({subcategoryCount})</span>
+                                  </label>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     )
                   })}
                 </div>
@@ -400,7 +562,7 @@ export default function ProductList() {
                 <div className="flex items-center gap-4">
                   <h1 className="text-2xl font-bold text-gray-900">
                     {selectedCategories.length === 1 
-                      ? categories.find(c => c.id === selectedCategories[0])?.name 
+                      ? getCategoryById(selectedCategories[0])?.name 
                       : 'All Products'
                     }
                   </h1>
@@ -472,7 +634,7 @@ export default function ProductList() {
               </div>
 
               {/* Active Filters */}
-              {(selectedCategories.length > 0 || selectedBrands.length > 0 || selectedRating > 0 || inStockOnly || onSaleOnly || query) && (
+              {(selectedCategories.length > 0 || selectedSubcategories.length > 0 || selectedBrands.length > 0 || selectedRating > 0 || inStockOnly || onSaleOnly || query) && (
                 <div className="mt-4 pt-4 border-t border-gray-200">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-sm text-gray-600">Active filters:</span>
@@ -485,11 +647,35 @@ export default function ProductList() {
                     )}
                     
                     {selectedCategories.map(categoryId => {
-                      const category = categories.find(c => c.id === categoryId)
+                      const category = getCategoryById(categoryId)
                       return (
                         <span key={categoryId} className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                          {category?.name}
+                          {category?.icon} {category?.name}
                           <button onClick={() => toggleCategory(categoryId)} className="ml-1 hover:text-blue-600">×</button>
+                        </span>
+                      )
+                    })}
+
+                    {selectedSubcategories.map(subcategoryId => {
+                      // Find the subcategory and its parent category
+                      let subcategory = null
+                      let parentCategory = null
+                      
+                      for (const category of categories) {
+                        const found = category.subcategories.find(sub => sub.id === subcategoryId)
+                        if (found) {
+                          subcategory = found
+                          parentCategory = category
+                          break
+                        }
+                      }
+                      
+                      if (!subcategory) return null
+                      
+                      return (
+                        <span key={subcategoryId} className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                          {parentCategory?.icon} {subcategory.name}
+                          <button onClick={() => toggleSubcategory(subcategoryId)} className="ml-1 hover:text-green-600">×</button>
                         </span>
                       )
                     })}

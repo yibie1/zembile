@@ -89,7 +89,7 @@ export default function Login() {
   const handleDemoLogin = () => {
     setFormData({
       email: 'demo@zembile.com',
-      password: 'demo123'
+      password: 'demo123456'
     })
     toast.info('Demo credentials filled. Click Login to continue.')
   }

@@ -7,10 +7,117 @@ export default function Home() {
   const [featuredProducts] = useState(getFeaturedProducts().slice(0, 8))
   const [discountedProducts] = useState(getDiscountedProducts().slice(0, 6))
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0)
+  const [currentPromoIndex, setCurrentPromoIndex] = useState(0)
   const [newArrivals] = useState(products.slice(0, 6))
   const [bestSellers] = useState(products.filter(p => p.rating >= 4.5).slice(0, 6))
   const [email, setEmail] = useState('')
   const [isSubscribing, setIsSubscribing] = useState(false)
+  
+  // Flash Sale Timer State
+  const [timeLeft, setTimeLeft] = useState({
+    hours: 23,
+    minutes: 45,
+    seconds: 12
+  })
+
+  // Dynamic promotional banners
+  const promoBanners = [
+    {
+      id: 1,
+      type: 'flash_sale',
+      title: '⚡ Flash Sale',
+      subtitle: 'Up to 50% off on selected Ethiopian products',
+      badge: 'Limited Time',
+      bgColor: 'from-red-600 to-red-700',
+      textColor: 'text-white',
+      link: '/products?filter=sale',
+      cta: 'Shop Now',
+      endTime: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
+      active: true
+    },
+    {
+      id: 2,
+      type: 'christmas',
+      title: '🎄 Christmas Special',
+      subtitle: 'Perfect Ethiopian gifts for the holiday season',
+      badge: 'Holiday Deals',
+      bgColor: 'from-green-600 to-red-600',
+      textColor: 'text-white',
+      link: '/products?category=crafts',
+      cta: 'Shop Gifts',
+      endTime: new Date('2024-12-25'),
+      active: true
+    },
+    {
+      id: 3,
+      type: 'new_year',
+      title: '🎊 New Year Sale',
+      subtitle: 'Start 2024 with authentic Ethiopian flavors',
+      badge: 'New Year Special',
+      bgColor: 'from-purple-600 to-pink-600',
+      textColor: 'text-white',
+      link: '/products?category=food',
+      cta: 'Explore Now',
+      endTime: new Date('2024-01-15'),
+      active: true
+    },
+    {
+      id: 4,
+      type: 'coffee_week',
+      title: '☕ Ethiopian Coffee Week',
+      subtitle: 'Celebrate the birthplace of coffee with premium beans',
+      badge: 'Coffee Special',
+      bgColor: 'from-amber-700 to-amber-900',
+      textColor: 'text-white',
+      link: '/products?category=coffee',
+      cta: 'Shop Coffee',
+      endTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+      active: true
+    },
+    {
+      id: 5,
+      type: 'free_shipping',
+      title: '🚚 Free Shipping Weekend',
+      subtitle: 'Free delivery on all orders - no minimum required',
+      badge: 'This Weekend Only',
+      bgColor: 'from-blue-600 to-blue-700',
+      textColor: 'text-white',
+      link: '/products',
+      cta: 'Shop All',
+      endTime: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
+      active: true
+    }
+  ]
+
+  // Dynamic trust indicators that rotate
+  const trustIndicatorSets = [
+    [
+      { icon: "🚚", text: "Free shipping over 500 ETB", highlight: true },
+      { icon: "🔒", text: "Secure payment", highlight: false },
+      { icon: "↩️", text: "Easy returns", highlight: false },
+      { icon: "📞", text: "24/7 support", highlight: false }
+    ],
+    [
+      { icon: "⚡", text: "Same-day delivery in Addis", highlight: true },
+      { icon: "🏆", text: "Premium quality guaranteed", highlight: false },
+      { icon: "🇪🇹", text: "100% Ethiopian authentic", highlight: false },
+      { icon: "💝", text: "Gift wrapping available", highlight: false }
+    ],
+    [
+      { icon: "🌟", text: "4.8★ customer rating", highlight: true },
+      { icon: "👥", text: "10,000+ happy customers", highlight: false },
+      { icon: "🤝", text: "Supporting local artisans", highlight: false },
+      { icon: "📦", text: "Careful packaging", highlight: false }
+    ]
+  ]
+
+  const [currentTrustSet, setCurrentTrustSet] = useState(0)
+
+  // Get active promotional banners
+  const activePromoBanners = promoBanners.filter(banner => {
+    if (!banner.active) return false
+    return new Date() < new Date(banner.endTime)
+  })
 
   // Banner carousel
   const banners = [
@@ -43,14 +150,6 @@ export default function Home() {
     }
   ]
 
-  // Trust indicators data
-  const trustIndicators = [
-    { icon: "🚚", text: "Free shipping over 500 ETB" },
-    { icon: "🔒", text: "Secure payment" },
-    { icon: "↩️", text: "Easy returns" },
-    { icon: "📞", text: "24/7 support" }
-  ]
-
   // Newsletter subscription handler
   const handleNewsletterSubmit = async (e) => {
     e.preventDefault()
@@ -66,6 +165,36 @@ export default function Home() {
     }, 1000)
   }
 
+  // Timer countdown effect
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        let { hours, minutes, seconds } = prev
+        
+        if (seconds > 0) {
+          seconds--
+        } else if (minutes > 0) {
+          minutes--
+          seconds = 59
+        } else if (hours > 0) {
+          hours--
+          minutes = 59
+          seconds = 59
+        } else {
+          // Reset timer when it reaches 0
+          hours = 23
+          minutes = 59
+          seconds = 59
+        }
+        
+        return { hours, minutes, seconds }
+      })
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [])
+
+  // Banner carousel effect
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentBannerIndex((prev) => (prev + 1) % banners.length)
@@ -73,16 +202,47 @@ export default function Home() {
     return () => clearInterval(timer)
   }, [banners.length])
 
+  // Promotional banner rotation
+  useEffect(() => {
+    if (activePromoBanners.length > 1) {
+      const timer = setInterval(() => {
+        setCurrentPromoIndex((prev) => (prev + 1) % activePromoBanners.length)
+      }, 8000) // Change every 8 seconds
+      return () => clearInterval(timer)
+    }
+  }, [activePromoBanners.length])
+
+  // Trust indicators rotation
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTrustSet((prev) => (prev + 1) % trustIndicatorSets.length)
+    }, 6000) // Change every 6 seconds
+    return () => clearInterval(timer)
+  }, [trustIndicatorSets.length])
+
+  // Format time with leading zeros
+  const formatTime = (time) => time.toString().padStart(2, '0')
+
   return (
     <div className="space-y-12">
-      {/* Trust Indicators Bar */}
-      <section className="bg-zembile-yellow py-3">
+      {/* Dynamic Trust Indicators Bar */}
+      <section className="bg-zembile-yellow py-3 overflow-hidden">
         <div className="container mx-auto px-4">
-          <div className="flex flex-wrap justify-center items-center gap-6 text-sm font-medium text-zembile-gray">
-            {trustIndicators.map((indicator, index) => (
-              <div key={index} className="flex items-center gap-2">
+          <div className="flex flex-wrap justify-center items-center gap-6 text-sm font-medium text-zembile-gray transition-all duration-500">
+            {trustIndicatorSets[currentTrustSet].map((indicator, index) => (
+              <div 
+                key={`${currentTrustSet}-${index}`} 
+                className={`flex items-center gap-2 transition-all duration-300 ${
+                  indicator.highlight ? 'scale-110 font-bold' : ''
+                }`}
+              >
                 <span className="text-lg">{indicator.icon}</span>
                 <span>{indicator.text}</span>
+                {indicator.highlight && (
+                  <span className="bg-zembile-gray text-zembile-yellow px-2 py-1 rounded-full text-xs font-bold ml-1">
+                    NEW
+                  </span>
+                )}
               </div>
             ))}
           </div>
@@ -168,44 +328,103 @@ export default function Home() {
         </button>
       </section>
 
-      {/* Flash Sale Banner */}
-      <section className="bg-gradient-to-r from-red-600 to-red-700 text-white rounded-2xl p-6 md:p-8">
-        <div className="flex flex-col md:flex-row items-center justify-between">
-          <div className="text-center md:text-left mb-4 md:mb-0">
-            <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
-              <span className="text-2xl">⚡</span>
-              <h3 className="text-2xl font-bold">Flash Sale</h3>
-              <span className="bg-white text-red-600 px-2 py-1 rounded-full text-sm font-bold">
-                Limited Time
-              </span>
-            </div>
-            <p className="text-red-100">Up to 50% off on selected Ethiopian products</p>
-          </div>
-          <div className="flex items-center gap-4">
-            {/* Countdown Timer */}
-            <div className="flex gap-2 text-center">
-              <div className="bg-white/20 rounded-lg p-2 min-w-[50px]">
-                <div className="text-xl font-bold">23</div>
-                <div className="text-xs">Hours</div>
-              </div>
-              <div className="bg-white/20 rounded-lg p-2 min-w-[50px]">
-                <div className="text-xl font-bold">45</div>
-                <div className="text-xs">Mins</div>
-              </div>
-              <div className="bg-white/20 rounded-lg p-2 min-w-[50px]">
-                <div className="text-xl font-bold">12</div>
-                <div className="text-xs">Secs</div>
-              </div>
-            </div>
-            <Link
-              to="/products?filter=sale"
-              className="bg-white text-red-600 px-6 py-3 rounded-full font-bold hover:bg-gray-100 transition-colors"
+      {/* Dynamic Promotional Banners */}
+      {activePromoBanners.length > 0 && (
+        <section className="relative">
+          {activePromoBanners.map((banner, index) => (
+            <div
+              key={banner.id}
+              className={`transition-all duration-1000 ${
+                index === currentPromoIndex ? 'opacity-100 relative' : 'opacity-0 absolute inset-0 pointer-events-none'
+              }`}
             >
-              Shop Now
-            </Link>
-          </div>
-        </div>
-      </section>
+              <div className={`bg-gradient-to-r ${banner.bgColor} ${banner.textColor} rounded-2xl p-6 md:p-8`}>
+                <div className="flex flex-col md:flex-row items-center justify-between">
+                  <div className="text-center md:text-left mb-4 md:mb-0">
+                    <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
+                      <h3 className="text-2xl font-bold">{banner.title}</h3>
+                      <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-bold">
+                        {banner.badge}
+                      </span>
+                    </div>
+                    <p className="text-white/90 mb-2">{banner.subtitle}</p>
+                    {banner.type === 'flash_sale' && (
+                      <p className="text-xs text-white/70">
+                        Hurry! Limited quantities available
+                      </p>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center gap-4">
+                    {/* Working Countdown Timer for Flash Sale */}
+                    {banner.type === 'flash_sale' && (
+                      <div className="flex gap-2 text-center">
+                        <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3 min-w-[60px]">
+                          <div className="text-2xl font-bold">{formatTime(timeLeft.hours)}</div>
+                          <div className="text-xs opacity-80">Hours</div>
+                        </div>
+                        <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3 min-w-[60px]">
+                          <div className="text-2xl font-bold">{formatTime(timeLeft.minutes)}</div>
+                          <div className="text-xs opacity-80">Mins</div>
+                        </div>
+                        <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3 min-w-[60px]">
+                          <div className="text-2xl font-bold">{formatTime(timeLeft.seconds)}</div>
+                          <div className="text-xs opacity-80">Secs</div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Static Timer for Other Promotions */}
+                    {banner.type !== 'flash_sale' && (
+                      <div className="text-center">
+                        <div className="text-sm opacity-80 mb-1">Ends in</div>
+                        <div className="text-lg font-bold">
+                          {Math.ceil((new Date(banner.endTime) - new Date()) / (1000 * 60 * 60 * 24))} days
+                        </div>
+                      </div>
+                    )}
+                    
+                    <Link
+                      to={banner.link}
+                      className="bg-white/90 hover:bg-white text-gray-900 px-6 py-3 rounded-full font-bold transition-all duration-300 hover:scale-105 shadow-lg"
+                    >
+                      {banner.cta}
+                    </Link>
+                  </div>
+                </div>
+                
+                {/* Progress bar for urgency */}
+                {banner.type === 'flash_sale' && (
+                  <div className="mt-4">
+                    <div className="flex justify-between text-sm mb-2">
+                      <span>Sale Progress</span>
+                      <span>67% claimed</span>
+                    </div>
+                    <div className="w-full bg-white/20 rounded-full h-2">
+                      <div className="bg-white h-2 rounded-full w-2/3 transition-all duration-300"></div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+          
+          {/* Promotional Banner Indicators */}
+          {activePromoBanners.length > 1 && (
+            <div className="flex justify-center mt-4 gap-2">
+              {activePromoBanners.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentPromoIndex(index)}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                    index === currentPromoIndex ? 'bg-gray-800 w-6' : 'bg-gray-400'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Categories Grid */}
       <section>

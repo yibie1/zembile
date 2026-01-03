@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
 import { useWishlist } from '../context/WishlistContext'
 import { useAuth } from '../context/AuthContext'
-import { categories, searchProducts } from '../data/products'
+import { categories, searchProducts, products as allProducts } from '../data/products'
 
 export default function Header() {
   const { totalCount } = useCart()
@@ -100,29 +100,9 @@ export default function Header() {
                 </svg>
               </button>
 
-              {/* Categories Dropdown Menu */}
+              {/* Categories Dropdown Menu with Subcategories */}
               {showCategoriesMenu && (
-                <div className="absolute top-full left-0 mt-2 w-80 bg-white border border-gray-200 rounded-xl shadow-lg z-50">
-                  <div className="p-4">
-                    <h3 className="font-semibold text-gray-900 mb-3">Shop by Category</h3>
-                    <div className="grid grid-cols-2 gap-2">
-                      {categories.map((category) => (
-                        <Link
-                          key={category.id}
-                          to={`/products?category=${category.id}`}
-                          onClick={() => setShowCategoriesMenu(false)}
-                          className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
-                        >
-                          <span className="text-2xl">{category.icon}</span>
-                          <div>
-                            <div className="font-medium text-gray-900 text-sm">{category.name}</div>
-                            <div className="text-xs text-gray-500">{category.description}</div>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                <CategoriesDropdown onClose={() => setShowCategoriesMenu(false)} />
               )}
             </div>
           </div>
@@ -526,6 +506,114 @@ function WishlistDropdown({ onClose }) {
             </button>
           </div>
         )}
+      </div>
+    </div>
+  )
+}
+
+// Categories Dropdown Component with Subcategories
+function CategoriesDropdown({ onClose }) {
+  const [hoveredCategory, setHoveredCategory] = useState(null)
+  const navigate = useNavigate()
+
+  const handleCategoryClick = (categoryId) => {
+    navigate(`/products?category=${categoryId}`)
+    onClose()
+  }
+
+  const handleSubcategoryClick = (categoryId, subcategoryId) => {
+    navigate(`/products?category=${categoryId}&subcategory=${subcategoryId}`)
+    onClose()
+  }
+
+  return (
+    <div className="absolute top-full left-0 mt-2 w-96 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-96 overflow-y-auto">
+      <div className="p-4">
+        <h3 className="font-semibold text-gray-900 mb-3">Shop by Category</h3>
+        <div className="space-y-2">
+          {categories.map((category) => (
+            <div 
+              key={category.id} 
+              className="border border-gray-100 rounded-lg overflow-hidden"
+              onMouseEnter={() => setHoveredCategory(category.id)}
+              onMouseLeave={() => setHoveredCategory(null)}
+            >
+              {/* Main Category */}
+              <div className="flex items-center justify-between p-3 hover:bg-gray-50 transition-colors cursor-pointer">
+                <button
+                  onClick={() => handleCategoryClick(category.id)}
+                  className="flex items-center gap-3 flex-1 text-left"
+                >
+                  <span className="text-xl">{category.icon}</span>
+                  <div>
+                    <div className="font-medium text-gray-900 text-sm">{category.name}</div>
+                    <div className="text-xs text-gray-500">{category.description}</div>
+                  </div>
+                </button>
+                
+                {/* Hover Indicator Arrow */}
+                <div className="p-1">
+                  <svg 
+                    className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
+                      hoveredCategory === category.id ? 'rotate-180' : ''
+                    }`} 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Subcategories - Auto expand on hover */}
+              <div className={`bg-gray-50 border-t border-gray-100 transition-all duration-300 ease-in-out ${
+                hoveredCategory === category.id 
+                  ? 'max-h-96 opacity-100' 
+                  : 'max-h-0 opacity-0 overflow-hidden'
+              }`}>
+                <div className="p-2 space-y-1">
+                  {category.subcategories.map((subcategory) => {
+                    const count = allProducts.filter(p => 
+                      p.category === category.id && p.subcategory === subcategory.id
+                    ).length
+                    
+                    if (count === 0) return null
+                    
+                    return (
+                      <button
+                        key={subcategory.id}
+                        onClick={() => handleSubcategoryClick(category.id, subcategory.id)}
+                        className="w-full text-left px-3 py-2 rounded hover:bg-white transition-colors group"
+                      >
+                        <div className="font-medium text-gray-800 text-sm group-hover:text-zembile-gray transition-colors">
+                          {subcategory.name}
+                        </div>
+                        <div className="text-xs text-gray-600 flex items-center justify-between">
+                          <span>{subcategory.description}</span>
+                          <span className="text-gray-500">({count})</span>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        {/* View All Products Link */}
+        <div className="mt-4 pt-3 border-t border-gray-100">
+          <button
+            onClick={() => {
+              navigate('/products')
+              onClose()
+            }}
+            className="w-full text-center py-2 text-sm text-zembile-gray hover:text-gray-600 font-medium"
+          >
+            View All Products →
+          </button>
+        </div>
       </div>
     </div>
   )

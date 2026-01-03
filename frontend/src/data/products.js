@@ -1,11 +1,82 @@
-// Enhanced product data structure for professional e-commerce
+// Enhanced product data structure with subcategories
 export const categories = [
-  { id: 'coffee', name: 'Coffee & Beverages', icon: '☕', description: 'Premium Ethiopian coffee and traditional drinks' },
-  { id: 'food', name: 'Food & Spices', icon: '🌶️', description: 'Traditional foods, spices, and ingredients' },
-  { id: 'home', name: 'Home & Living', icon: '🏠', description: 'Handcrafted home decor and furniture' },
-  { id: 'fashion', name: 'Fashion & Accessories', icon: '👗', description: 'Traditional and modern Ethiopian fashion' },
-  { id: 'crafts', name: 'Arts & Crafts', icon: '🎨', description: 'Handmade crafts and artistic pieces' },
-  { id: 'beauty', name: 'Beauty & Wellness', icon: '💄', description: 'Natural beauty and wellness products' }
+  { 
+    id: 'coffee', 
+    name: 'Coffee & Beverages', 
+    icon: '☕', 
+    description: 'Premium Ethiopian coffee and traditional drinks',
+    subcategories: [
+      { id: 'single-origin', name: 'Single Origin Coffee', description: 'Premium single-origin beans from specific regions' },
+      { id: 'blends', name: 'Coffee Blends', description: 'Expertly crafted coffee blends' },
+      { id: 'accessories', name: 'Coffee Accessories', description: 'Traditional brewing equipment and accessories' },
+      { id: 'traditional-drinks', name: 'Traditional Beverages', description: 'Honey wine, tej, and other traditional drinks' }
+    ]
+  },
+  { 
+    id: 'food', 
+    name: 'Food & Spices', 
+    icon: '🌶️', 
+    description: 'Traditional foods, spices, and ingredients',
+    subcategories: [
+      { id: 'spices-seasonings', name: 'Spices & Seasonings', description: 'Berbere, mitmita, and traditional spice blends' },
+      { id: 'grains-flours', name: 'Grains & Flours', description: 'Teff, barley, and other Ethiopian grains' },
+      { id: 'ready-meals', name: 'Ready-to-Eat', description: 'Fresh injera, prepared foods, and snacks' },
+      { id: 'honey-sweeteners', name: 'Honey & Sweeteners', description: 'Pure Ethiopian honey and natural sweeteners' },
+      { id: 'oils-condiments', name: 'Oils & Condiments', description: 'Traditional cooking oils and condiments' }
+    ]
+  },
+  { 
+    id: 'home', 
+    name: 'Home & Living', 
+    icon: '🏠', 
+    description: 'Handcrafted home decor and furniture',
+    subcategories: [
+      { id: 'baskets-storage', name: 'Baskets & Storage', description: 'Handwoven baskets, mesob, and storage solutions' },
+      { id: 'textiles-fabrics', name: 'Textiles & Fabrics', description: 'Traditional fabrics, throws, and cushions' },
+      { id: 'furniture', name: 'Furniture', description: 'Handcrafted wooden furniture and seating' },
+      { id: 'decorative-items', name: 'Decorative Items', description: 'Wall art, sculptures, and ornamental pieces' },
+      { id: 'lighting', name: 'Lighting', description: 'Traditional lamps and modern lighting solutions' }
+    ]
+  },
+  { 
+    id: 'fashion', 
+    name: 'Fashion & Accessories', 
+    icon: '👗', 
+    description: 'Traditional and modern Ethiopian fashion',
+    subcategories: [
+      { id: 'traditional-clothing', name: 'Traditional Clothing', description: 'Habesha kemis, netela, and cultural attire' },
+      { id: 'modern-fashion', name: 'Modern Fashion', description: 'Contemporary clothing with Ethiopian influences' },
+      { id: 'footwear', name: 'Footwear', description: 'Handmade leather shoes and traditional sandals' },
+      { id: 'jewelry-accessories', name: 'Jewelry & Accessories', description: 'Traditional jewelry, bags, and accessories' },
+      { id: 'mens-wear', name: "Men's Wear", description: 'Traditional and modern clothing for men' }
+    ]
+  },
+  { 
+    id: 'crafts', 
+    name: 'Arts & Crafts', 
+    icon: '🎨', 
+    description: 'Handmade crafts and artistic pieces',
+    subcategories: [
+      { id: 'pottery-ceramics', name: 'Pottery & Ceramics', description: 'Handmade pottery, jebena, and ceramic art' },
+      { id: 'wood-crafts', name: 'Wood Crafts', description: 'Carved wooden items and sculptures' },
+      { id: 'metalwork', name: 'Metalwork', description: 'Traditional metalwork and jewelry' },
+      { id: 'paintings-art', name: 'Paintings & Art', description: 'Traditional paintings and contemporary art' },
+      { id: 'musical-instruments', name: 'Musical Instruments', description: 'Traditional Ethiopian musical instruments' }
+    ]
+  },
+  { 
+    id: 'beauty', 
+    name: 'Beauty & Wellness', 
+    icon: '💄', 
+    description: 'Natural beauty and wellness products',
+    subcategories: [
+      { id: 'skincare', name: 'Skincare', description: 'Natural skincare products and treatments' },
+      { id: 'haircare', name: 'Hair Care', description: 'Traditional hair oils and treatments' },
+      { id: 'aromatherapy', name: 'Aromatherapy', description: 'Essential oils and incense' },
+      { id: 'wellness', name: 'Wellness Products', description: 'Natural health and wellness items' },
+      { id: 'traditional-medicine', name: 'Traditional Medicine', description: 'Herbal remedies and traditional treatments' }
+    ]
+  }
 ]
 
 export const brands = [
@@ -26,6 +97,7 @@ export const products = [
     originalPrice: 520,
     discount: 13,
     category: 'coffee',
+    subcategory: 'single-origin',
     brand: 'highland-harvest',
     sku: 'YRG-250-MR',
     weight: '250g',
@@ -60,6 +132,7 @@ export const products = [
     originalPrice: 1400,
     discount: 14,
     category: 'home',
+    subcategory: 'baskets-storage',
     brand: 'traditional-craft',
     sku: 'MSB-LRG-001',
     dimensions: '35cm diameter x 8cm height',
@@ -92,6 +165,7 @@ export const products = [
     originalPrice: 200,
     discount: 0,
     category: 'food',
+    subcategory: 'ready-meals',
     brand: 'zembile-select',
     sku: 'INJ-FAM-5PC',
     weight: '5 pieces',
@@ -123,6 +197,7 @@ export const products = [
     originalPrice: 750,
     discount: 13,
     category: 'food',
+    subcategory: 'honey-sweeteners',
     brand: 'highland-harvest',
     sku: 'HNY-500-RAW',
     weight: '500g',
@@ -155,6 +230,7 @@ export const products = [
     originalPrice: 2100,
     discount: 14,
     category: 'fashion',
+    subcategory: 'footwear',
     brand: 'addis-artisan',
     sku: 'SND-LEA-M42',
     sizes: ['38', '39', '40', '41', '42', '43', '44'],
@@ -187,6 +263,7 @@ export const products = [
     originalPrice: 1100,
     discount: 14,
     category: 'food',
+    subcategory: 'spices-seasonings',
     brand: 'zembile-select',
     sku: 'SPC-GFT-SET',
     weight: '6 x 50g containers',
@@ -219,6 +296,7 @@ export const products = [
     originalPrice: 2500,
     discount: 12,
     category: 'home',
+    subcategory: 'textiles-fabrics',
     brand: 'traditional-craft',
     sku: 'THR-COT-TRD',
     dimensions: '150cm x 200cm',
@@ -251,6 +329,7 @@ export const products = [
     originalPrice: 850,
     discount: 12,
     category: 'coffee',
+    subcategory: 'accessories',
     brand: 'traditional-craft',
     sku: 'JEB-CER-MED',
     capacity: '500ml',
@@ -283,6 +362,7 @@ export const products = [
     originalPrice: 450,
     discount: 11,
     category: 'food',
+    subcategory: 'grains-flours',
     brand: 'highland-harvest',
     sku: 'TFF-ORG-1KG',
     weight: '1kg',
@@ -315,6 +395,7 @@ export const products = [
     originalPrice: 1350,
     discount: 11,
     category: 'coffee',
+    subcategory: 'single-origin',
     brand: 'highland-harvest',
     sku: 'CFS-SMP-3X100',
     weight: '3 x 100g',
@@ -347,6 +428,7 @@ export const products = [
     originalPrice: 1900,
     discount: 13,
     category: 'fashion',
+    subcategory: 'traditional-clothing',
     brand: 'traditional-craft',
     sku: 'NET-WHT-TRD',
     dimensions: '200cm x 100cm',
@@ -379,6 +461,7 @@ export const products = [
     originalPrice: 420,
     discount: 10,
     category: 'beauty',
+    subcategory: 'skincare',
     brand: 'highland-harvest',
     sku: 'SHB-NAT-200G',
     weight: '200g',
@@ -406,6 +489,27 @@ export const products = [
 // Helper functions for filtering and searching
 export const getProductsByCategory = (categoryId) => {
   return products.filter(product => product.category === categoryId)
+}
+
+export const getProductsBySubcategory = (categoryId, subcategoryId) => {
+  return products.filter(product => 
+    product.category === categoryId && product.subcategory === subcategoryId
+  )
+}
+
+export const getSubcategoriesByCategory = (categoryId) => {
+  const category = categories.find(cat => cat.id === categoryId)
+  return category ? category.subcategories : []
+}
+
+export const getCategoryById = (categoryId) => {
+  return categories.find(cat => cat.id === categoryId)
+}
+
+export const getSubcategoryById = (categoryId, subcategoryId) => {
+  const category = getCategoryById(categoryId)
+  if (!category) return null
+  return category.subcategories.find(sub => sub.id === subcategoryId)
 }
 
 export const getFeaturedProducts = () => {

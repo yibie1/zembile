@@ -23,6 +23,9 @@ import Careers from './pages/Careers'
 import Shipping from './pages/Shipping'
 import Returns from './pages/Returns'
 import Terms from './pages/Terms'
+import Privacy from './pages/Privacy'
+import Cookies from './pages/Cookies'
+import Accessibility from './pages/Accessibility'
 import Account from './pages/Account'
 import NotFound from './pages/NotFound'
 
@@ -80,6 +83,9 @@ createRoot(document.getElementById('root')).render(
                 <Route path="shipping" element={<Shipping />} />
                 <Route path="returns" element={<Returns />} />
                 <Route path="terms" element={<Terms />} />
+                <Route path="privacy" element={<Privacy />} />
+                <Route path="cookies" element={<Cookies />} />
+                <Route path="accessibility" element={<Accessibility />} />
               </Route>
               
               {/* Auth routes with separate layout (no Header/Footer) */}

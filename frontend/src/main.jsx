@@ -64,6 +64,11 @@ createRoot(document.getElementById('root')).render(
                   </ProtectedRoute>
                 } />
                 <Route path="wishlist" element={<Wishlist />} />
+                <Route path="orders" element={
+                  <ProtectedRoute>
+                    <Orders />
+                  </ProtectedRoute>
+                } />
                 <Route path="account/orders" element={
                   <ProtectedRoute>
                     <Orders />

@@ -26,7 +26,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Phone number is required'],
     trim: true,
-    match: [/^(\+251|0)?9\d{8}$/, 'Please enter a valid Ethiopian phone number']
+    match: [/^(\+251|251|0)?[79]\d{8}$/, 'Please enter a valid Ethiopian phone number']
   },
   password: {
     type: String,

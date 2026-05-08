@@ -22,44 +22,32 @@ export function WishlistProvider({ children }) {
     }
   }, [items])
 
+  // Normalize id: support both _id (MongoDB) and id (legacy)
+  const getId = (product) => product._id || product.id
+
   const addItem = (product) => {
+    const pid = getId(product)
     setItems(prev => {
-      const exists = prev.find(p => p.id === product.id)
-      if (exists) {
-        toast.error('Item already in wishlist')
-        return prev
-      }
-      
-      const newItems = [...prev, { ...product, addedAt: new Date().toISOString() }]
-      toast.success('Added to wishlist', {
-        icon: '❤️',
-        duration: 2000,
-      })
-      return newItems
+      const exists = prev.find(p => (p._id || p.id) === pid)
+      if (exists) { toast.error('Item already in wishlist'); return prev }
+      toast.success('Added to wishlist', { icon: '❤️', duration: 2000 })
+      return [...prev, { ...product, id: pid, _id: pid, addedAt: new Date().toISOString() }]
     })
   }
 
   const removeItem = (productId) => {
     setItems(prev => {
-      const newItems = prev.filter(p => p.id !== productId)
-      toast.success('Removed from wishlist', {
-        icon: '💔',
-        duration: 2000,
-      })
-      return newItems
+      toast.success('Removed from wishlist', { icon: '💔', duration: 2000 })
+      return prev.filter(p => (p._id || p.id) !== productId)
     })
   }
 
-  const isInWishlist = (productId) => {
-    return items.some(p => p.id === productId)
-  }
+  const isInWishlist = (productId) => items.some(p => (p._id || p.id) === productId)
 
   const toggleItem = (product) => {
-    if (isInWishlist(product.id)) {
-      removeItem(product.id)
-    } else {
-      addItem(product)
-    }
+    const pid = getId(product)
+    if (isInWishlist(pid)) removeItem(pid)
+    else addItem(product)
   }
 
   const clear = () => {

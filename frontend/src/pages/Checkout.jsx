@@ -112,19 +112,20 @@ export default function Checkout() {
 
   const handleChapaPayment = async (orderData) => {
     try {
+      // Normalize phone: strip spaces, dashes, parentheses
+      const normalizedPhone = customerInfo.phone.replace(/[\s\-\(\)]/g, '')
+
       // Initialize Chapa payment
       const chapaResponse = await fetch('/api/chapa/initialize', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           amount: orderAmount,
           currency: 'ETB',
           email: customerInfo.email,
           first_name: customerInfo.firstName,
           last_name: customerInfo.lastName,
-          phone_number: customerInfo.phone,
+          phone_number: normalizedPhone,
           tx_ref: `zembile_${Date.now()}`,
           callback_url: `${window.location.origin}/payment/callback`,
           return_url: `${window.location.origin}/payment/success`,
@@ -153,10 +154,12 @@ export default function Checkout() {
   const handleBankTransfer = async (orderData) => {
     try {
       // Create order for bank transfer
+      const token = (() => { try { return JSON.parse(localStorage.getItem('zembile_auth_v1'))?.token } catch { return null } })()
       const response = await fetch('/api/orders', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         },
         body: JSON.stringify({
           ...orderData,
@@ -299,7 +302,7 @@ export default function Checkout() {
                       type="tel"
                       value={customerInfo.phone}
                       onChange={(e) => handleInputChange('phone', e.target.value)}
-                      placeholder="+251-9-12-34-56-78"
+                      placeholder="0912345678 or +251912345678"
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-zembile-yellow focus:border-transparent"
                       required
                     />

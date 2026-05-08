@@ -1,198 +1,173 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import {
-  PlusIcon,
-  PencilIcon,
-  TrashIcon,
-  TagIcon,
-  PhotoIcon,
-} from '@heroicons/react/24/outline'
+import { PlusIcon, PencilIcon, TrashIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { categoriesApi } from '../services/api'
+import toast from 'react-hot-toast'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
+
+const EMPTY = { name: '', description: '', icon: '📦', sortOrder: 0 }
 
 export default function Categories() {
   const [categories, setCategories] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [showAddModal, setShowAddModal] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [showModal, setShowModal] = useState(false)
+  const [editCat, setEditCat] = useState(null)
+  const [form, setForm] = useState(EMPTY)
+  const [saving, setSaving] = useState(false)
+  const [deleteConfirm, setDeleteConfirm] = useState(null)
 
-  // Mock data
-  const mockCategories = [
-    {
-      id: 1,
-      name: 'Traditional Clothing',
-      description: 'Authentic Ethiopian traditional dresses and clothing',
-      productCount: 45,
-      status: 'active',
-      image: '/api/placeholder/200/150',
-      createdAt: '2024-01-01',
-    },
-    {
-      id: 2,
-      name: 'Jewelry',
-      description: 'Handcrafted Ethiopian jewelry and accessories',
-      productCount: 28,
-      status: 'active',
-      image: '/api/placeholder/200/150',
-      createdAt: '2024-01-01',
-    },
-    {
-      id: 3,
-      name: 'Home & Kitchen',
-      description: 'Traditional Ethiopian home and kitchen items',
-      productCount: 32,
-      status: 'active',
-      image: '/api/placeholder/200/150',
-      createdAt: '2024-01-01',
-    },
-    {
-      id: 4,
-      name: 'Art & Crafts',
-      description: 'Handmade Ethiopian art and craft items',
-      productCount: 19,
-      status: 'active',
-      image: '/api/placeholder/200/150',
-      createdAt: '2024-01-01',
-    },
-    {
-      id: 5,
-      name: 'Spices',
-      description: 'Authentic Ethiopian spices and seasonings',
-      productCount: 15,
-      status: 'active',
-      image: '/api/placeholder/200/150',
-      createdAt: '2024-01-01',
-    },
-  ]
-
-  useEffect(() => {
-    setTimeout(() => {
-      setCategories(mockCategories)
-      setIsLoading(false)
-    }, 1000)
-  }, [])
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800'
-      case 'inactive':
-        return 'bg-gray-100 text-gray-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
-    }
+  const fetchCategories = async () => {
+    setLoading(true)
+    try {
+      const res = await categoriesApi.getAll()
+      setCategories(res.data || [])
+    } catch (err) { toast.error('Failed to load categories') }
+    finally { setLoading(false) }
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <LoadingSpinner size="lg" />
-      </div>
-    )
+  useEffect(() => { fetchCategories() }, [])
+
+  const openCreate = () => { setForm(EMPTY); setEditCat(null); setShowModal(true) }
+  const openEdit = (c) => { setForm({ name: c.name, description: c.description || '', icon: c.icon || '📦', sortOrder: c.sortOrder || 0 }); setEditCat(c); setShowModal(true) }
+
+  const handleSave = async (e) => {
+    e.preventDefault()
+    if (!form.name) { toast.error('Category name is required'); return }
+    setSaving(true)
+    try {
+      if (editCat) {
+        await categoriesApi.update(editCat._id, form)
+        toast.success('Category updated!')
+      } else {
+        await categoriesApi.create(form)
+        toast.success('Category created!')
+      }
+      setShowModal(false)
+      fetchCategories()
+    } catch (err) { toast.error(err.response?.data?.message || 'Failed to save category') }
+    finally { setSaving(false) }
   }
+
+  const handleDelete = async (id) => {
+    try {
+      await categoriesApi.delete(id)
+      toast.success('Category deleted')
+      setDeleteConfirm(null)
+      fetchCategories()
+    } catch (err) { toast.error(err.response?.data?.message || 'Failed to delete category') }
+  }
+
+  const inp = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+
+  if (loading) return <div className="flex items-center justify-center h-64"><LoadingSpinner size="lg" /></div>
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Categories</h1>
-          <p className="text-gray-600">Organize your products into categories</p>
-        </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
-        >
-          <PlusIcon className="w-5 h-5" />
-          <span>Add Category</span>
+        <div><h1 className="text-2xl font-bold text-gray-900">Categories</h1><p className="text-gray-600">Manage product categories ({categories.length} total)</p></div>
+        <button onClick={openCreate} className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium transition-colors">
+          <PlusIcon className="w-5 h-5" />Add Category
         </button>
       </div>
 
-      {/* Categories Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <AnimatePresence>
-          {categories.map((category, index) => (
-            <motion.div
-              key={category.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ delay: index * 0.1 }}
-              className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
-            >
-              {/* Category Image */}
-              <div className="aspect-video bg-gray-100 relative">
-                {category.image ? (
-                  <img
-                    src={category.image}
-                    alt={category.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <PhotoIcon className="w-12 h-12 text-gray-400" />
+      {categories.length === 0 ? (
+        <div className="text-center py-16 bg-white rounded-xl border">
+          <div className="text-5xl mb-3">📂</div>
+          <p className="text-sm text-gray-500">No categories yet. Add your first category.</p>
+          <button onClick={openCreate} className="mt-4 bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-700">Add Category</button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <AnimatePresence>
+            {categories.map((c, i) => (
+              <motion.div key={c._id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-primary-50 rounded-xl flex items-center justify-center text-2xl">{c.icon}</div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{c.name}</h3>
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${c.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>{c.isActive ? 'Active' : 'Inactive'}</span>
+                    </div>
+                  </div>
+                  <div className="flex gap-1">
+                    <button onClick={() => openEdit(c)} className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"><PencilIcon className="w-4 h-4" /></button>
+                    <button onClick={() => setDeleteConfirm(c)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"><TrashIcon className="w-4 h-4" /></button>
+                  </div>
+                </div>
+                {c.description && <p className="text-sm text-gray-600 mb-3">{c.description}</p>}
+                {c.subcategories?.length > 0 && (
+                  <div>
+                    <div className="text-xs font-medium text-gray-500 mb-2">Subcategories ({c.subcategories.length})</div>
+                    <div className="flex flex-wrap gap-1">
+                      {c.subcategories.slice(0, 4).map(s => <span key={s.slug} className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full">{s.name}</span>)}
+                      {c.subcategories.length > 4 && <span className="text-xs text-gray-500">+{c.subcategories.length - 4} more</span>}
+                    </div>
                   </div>
                 )}
-                <div className="absolute top-2 right-2">
-                  <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(category.status)}`}>
-                    {category.status}
-                  </span>
+                <div className="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500">
+                  {c.productCount || 0} products • Sort order: {c.sortOrder || 0}
                 </div>
-              </div>
-
-              {/* Category Info */}
-              <div className="p-6">
-                <div className="flex items-start justify-between mb-3">
-                  <h3 className="font-semibold text-gray-900 text-lg">{category.name}</h3>
-                  <TagIcon className="w-5 h-5 text-gray-400" />
-                </div>
-                
-                <p className="text-gray-600 text-sm mb-4 line-clamp-2">{category.description}</p>
-                
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm text-gray-500">
-                    {category.productCount} products
-                  </span>
-                  <span className="text-sm text-gray-500">
-                    Created {category.createdAt}
-                  </span>
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center space-x-2">
-                  <button className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-1">
-                    <span>View Products</span>
-                  </button>
-                  <button className="bg-primary-100 hover:bg-primary-200 text-primary-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors">
-                    <PencilIcon className="w-4 h-4" />
-                  </button>
-                  <button className="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors">
-                    <TrashIcon className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </div>
-
-      {/* Empty State */}
-      {categories.length === 0 && (
-        <div className="text-center py-12">
-          <TagIcon className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No categories found</h3>
-          <p className="mt-1 text-sm text-gray-500">
-            Get started by creating your first product category.
-          </p>
-          <div className="mt-6">
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg inline-flex items-center space-x-2 transition-colors"
-            >
-              <PlusIcon className="w-5 h-5" />
-              <span>Add Category</span>
-            </button>
-          </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
       )}
+
+      {/* Create/Edit Modal */}
+      <AnimatePresence>
+        {showModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={() => setShowModal(false)}>
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="bg-white rounded-xl max-w-md w-full" onClick={e => e.stopPropagation()}>
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-bold text-gray-900">{editCat ? 'Edit Category' : 'Add Category'}</h2>
+                  <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600"><XMarkIcon className="w-6 h-6" /></button>
+                </div>
+                <form onSubmit={handleSave} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Name <span className="text-red-500">*</span></label>
+                    <input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} className={inp} required />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Icon (emoji)</label>
+                    <input value={form.icon} onChange={e => setForm(p => ({ ...p, icon: e.target.value }))} className={inp} placeholder="📦" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} className={inp} rows={3} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Sort Order</label>
+                    <input type="number" value={form.sortOrder} onChange={e => setForm(p => ({ ...p, sortOrder: +e.target.value }))} className={inp} min={0} />
+                  </div>
+                  <div className="flex gap-3 pt-2">
+                    <button type="submit" disabled={saving} className="flex-1 bg-primary-600 hover:bg-primary-700 text-white py-2 rounded-lg font-medium text-sm disabled:opacity-50">
+                      {saving ? 'Saving...' : editCat ? 'Update' : 'Create'}
+                    </button>
+                    <button type="button" onClick={() => setShowModal(false)} className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium text-sm">Cancel</button>
+                  </div>
+                </form>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Confirm */}
+      <AnimatePresence>
+        {deleteConfirm && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="bg-white rounded-xl max-w-md w-full p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Delete Category</h3>
+              <p className="text-gray-600 mb-6">Delete <strong>{deleteConfirm.name}</strong>? This will fail if products exist in this category.</p>
+              <div className="flex gap-3">
+                <button onClick={() => handleDelete(deleteConfirm._id)} className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg font-medium text-sm">Delete</button>
+                <button onClick={() => setDeleteConfirm(null)} className="flex-1 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium py-2 text-sm">Cancel</button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

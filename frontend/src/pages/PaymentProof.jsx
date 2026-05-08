@@ -1,42 +1,16 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
+import { useAuth } from '../context/AuthContext'
 
-// Ethiopian Bank Accounts for Reference
 const BANK_ACCOUNTS = [
-  {
-    id: 'cbe',
-    name: 'Commercial Bank of Ethiopia (CBE)',
-    accountNumber: '1000123456789',
-    accountName: 'Zembile Marketplace PLC',
-    swiftCode: 'CBETETAA',
-    branch: 'Addis Ababa Main Branch'
-  },
-  {
-    id: 'dashen',
-    name: 'Dashen Bank',
-    accountNumber: '0012345678901',
-    accountName: 'Zembile Marketplace PLC',
-    swiftCode: 'DASHETET',
-    branch: 'Bole Branch'
-  },
-  {
-    id: 'awash',
-    name: 'Awash Bank',
-    accountNumber: '01320000123456',
-    accountName: 'Zembile Marketplace PLC',
-    swiftCode: 'AWASETET',
-    branch: 'Kazanchis Branch'
-  },
-  {
-    id: 'boa',
-    name: 'Bank of Abyssinia',
-    accountNumber: '123456789012',
-    accountName: 'Zembile Marketplace PLC',
-    swiftCode: 'ABYSETAA',
-    branch: 'Piazza Branch'
-  }
+  { id: 'cbe', name: 'Commercial Bank of Ethiopia (CBE)', accountNumber: '1000123456789', accountName: 'Zembile Marketplace PLC', swiftCode: 'CBETETAA', branch: 'Addis Ababa Main Branch' },
+  { id: 'dashen', name: 'Dashen Bank', accountNumber: '0012345678901', accountName: 'Zembile Marketplace PLC', swiftCode: 'DASHETET', branch: 'Bole Branch' },
+  { id: 'awash', name: 'Awash Bank', accountNumber: '01320000123456', accountName: 'Zembile Marketplace PLC', swiftCode: 'AWASETET', branch: 'Kazanchis Branch' },
+  { id: 'boa', name: 'Bank of Abyssinia', accountNumber: '123456789012', accountName: 'Zembile Marketplace PLC', swiftCode: 'ABYSETAA', branch: 'Piazza Branch' }
 ]
+
+const API = import.meta.env.VITE_API_URL || 'http://localhost:4000/api'
 
 export default function PaymentProof() {
   const location = useLocation()
@@ -136,36 +110,41 @@ export default function PaymentProof() {
       const formData = new FormData()
       formData.append('proof', file)
       formData.append('orderId', orderId)
-      formData.append('transactionRef', transactionRef)
+      formData.append('transactionRef', transactionRef.trim())
       formData.append('transactionDate', transactionDate)
       formData.append('bankId', bankAccount?.id || '')
-      formData.append('amount', amount || '')
+      formData.append('amount', String(amount || ''))
       formData.append('notes', notes)
 
-      // TODO: Replace with actual API endpoint
-      const response = await fetch('/api/payment-proof', {
+      // Get auth token
+      let token = null
+      try {
+        const stored = localStorage.getItem('zembile_auth_v1')
+        if (stored) token = JSON.parse(stored).token
+      } catch {}
+
+      const headers = {}
+      if (token) headers['Authorization'] = `Bearer ${token}`
+
+      const response = await fetch('/api/uploads/payment-proof', {
         method: 'POST',
+        headers,
         body: formData
       })
 
-      if (response.ok) {
-        const result = await response.json()
-        toast.success('Payment proof uploaded successfully! We will verify and process your order within 1-2 business days.')
-        
-        // Redirect to order confirmation or tracking page
-        navigate('/account/orders', { 
-          state: { 
-            message: 'Payment proof uploaded successfully',
-            orderId: orderId
-          }
+      const result = await response.json()
+
+      if (response.ok && result.status === 'success') {
+        toast.success('Payment proof uploaded! We will verify within 1-2 business days.')
+        navigate('/orders', {
+          state: { message: 'Payment proof uploaded successfully. We will verify it shortly.' }
         })
       } else {
-        const error = await response.json()
-        throw new Error(error.message || 'Upload failed')
+        throw new Error(result.message || 'Upload failed')
       }
     } catch (error) {
       console.error('Upload error:', error)
-      toast.error(error.message || 'Failed to upload payment proof. Please try again.')
+      toast.error(error.message || 'Failed to upload. Please try again.')
     } finally {
       setIsUploading(false)
     }

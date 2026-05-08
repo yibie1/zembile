@@ -3,8 +3,33 @@ const { Chapa } = require('chapa-nodejs')
 const crypto = require('crypto')
 const { v4: uuidv4 } = require('uuid')
 const validator = require('validator')
+const jwt = require('jsonwebtoken')
 const DatabaseService = require('../services/database')
 const router = express.Router()
+
+const JWT_SECRET = process.env.JWT_SECRET || 'zembile_jwt_secret_key_2024'
+
+// Optional auth middleware — attaches user if token present
+const optionalAuth = (req, res, next) => {
+  const token = req.headers['authorization']?.split(' ')[1]
+  if (token) {
+    jwt.verify(token, JWT_SECRET, (err, decoded) => {
+      if (!err) req.user = decoded
+    })
+  }
+  next()
+}
+
+// Required auth middleware
+const requireAuth = (req, res, next) => {
+  const token = req.headers['authorization']?.split(' ')[1]
+  if (!token) return res.status(401).json({ status: 'error', message: 'Authentication required' })
+  jwt.verify(token, JWT_SECRET, (err, decoded) => {
+    if (err) return res.status(403).json({ status: 'error', message: 'Invalid token' })
+    req.user = decoded
+    next()
+  })
+}
 
 // Initialize Chapa with API key
 const chapa = new Chapa({
@@ -18,15 +43,28 @@ const generateTxRef = () => {
 
 // Helper function to validate Ethiopian phone number
 const validateEthiopianPhone = (phone) => {
-  // Ethiopian phone number patterns: +251-9-XX-XX-XX-XX or 09XXXXXXXX
+  if (!phone) return false
+  // Normalize: strip spaces, dashes, parentheses
+  const cleaned = phone.replace(/[\s\-\(\)]/g, '')
+  // Accept all common Ethiopian phone formats:
+  // +251912345678, 251912345678, 0912345678, 912345678
+  // Also 7-digit local numbers starting with 7 (Ethio Telecom)
   const patterns = [
-    /^\+251-?9-?\d{2}-?\d{2}-?\d{2}-?\d{2}$/,
-    /^09\d{8}$/,
-    /^9\d{8}$/,
-    /^\+2519\d{8}$/
+    /^\+2519\d{8}$/,      // +251912345678
+    /^2519\d{8}$/,        // 251912345678
+    /^09\d{8}$/,          // 0912345678
+    /^9\d{8}$/,           // 912345678
+    /^\+2517\d{8}$/,      // +251712345678
+    /^07\d{8}$/,          // 0712345678
+    /^7\d{8}$/,           // 712345678
   ]
-  return patterns.some(pattern => pattern.test(phone.replace(/\s/g, '')))
+  return patterns.some(p => p.test(cleaned))
 }
+
+// ─── In-memory stores (fallback when MongoDB not connected) ───────────────────
+let transactions = []
+let orders = []
+let paymentProofs = []
 
 // Chapa Payment Initialization
 router.post('/chapa/initialize', async (req, res) => {
@@ -316,58 +354,34 @@ router.post('/chapa/callback', (req, res) => {
 })
 
 // Create Order (for both Chapa and bank transfer)
-router.post('/orders', (req, res) => {
+router.post('/orders', optionalAuth, async (req, res) => {
   try {
-    const {
-      items,
-      customerInfo,
-      subtotal,
-      shippingCost,
-      total,
-      paymentMethod,
-      selectedBank,
-      tx_ref
-    } = req.body
+    const { items, customerInfo, subtotal, shippingCost, total, paymentMethod, selectedBank, tx_ref } = req.body
 
-    // Validation
     if (!items || !Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Order items are required'
-      })
+      return res.status(400).json({ status: 'error', message: 'Order items are required' })
     }
-
     if (!customerInfo || !customerInfo.email || !customerInfo.firstName) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Customer information is required'
-      })
+      return res.status(400).json({ status: 'error', message: 'Customer information is required' })
     }
-
     if (!total || total <= 0) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Valid total amount is required'
-      })
+      return res.status(400).json({ status: 'error', message: 'Valid total amount is required' })
     }
-
     if (!paymentMethod || !['chapa', 'bank_transfer'].includes(paymentMethod)) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Valid payment method is required'
-      })
+      return res.status(400).json({ status: 'error', message: 'Valid payment method is required' })
     }
 
     const orderId = `ZMB${Date.now()}`
-    const order = {
-      id: orderId,
+    const orderData = {
+      orderId,
+      userId: req.user?.id || null,
       items: items.map(item => ({
-        productId: item.productId,
+        productId: item.productId || item.id,
         name: item.name,
         price: parseFloat(item.price),
-        quantity: parseInt(item.quantity),
+        quantity: parseInt(item.quantity || item.qty || 1),
         selectedSize: item.selectedSize,
-        subtotal: parseFloat(item.price) * parseInt(item.quantity)
+        subtotal: parseFloat(item.price) * parseInt(item.quantity || item.qty || 1)
       })),
       customerInfo: {
         firstName: customerInfo.firstName,
@@ -376,184 +390,134 @@ router.post('/orders', (req, res) => {
         phone: customerInfo.phone,
         address: customerInfo.address,
         city: customerInfo.city,
-        region: customerInfo.region
+        region: customerInfo.region || ''
       },
       pricing: {
-        subtotal: parseFloat(subtotal),
-        shippingCost: parseFloat(shippingCost),
+        subtotal: parseFloat(subtotal || 0),
+        shippingCost: parseFloat(shippingCost || 0),
         total: parseFloat(total)
       },
       paymentMethod,
       selectedBank: paymentMethod === 'bank_transfer' ? selectedBank : null,
       tx_ref: tx_ref || null,
-      status: paymentMethod === 'chapa' ? 'pending_payment' : 'pending_payment',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      status: 'pending_payment'
     }
 
-    orders.push(order)
+    // Use DatabaseService (MongoDB) if available, else in-memory
+    const savedOrder = await DatabaseService.createOrder(orderData)
+    const savedOrderId = savedOrder.orderId || savedOrder.id || orderId
+
+    // Also keep in-memory copy for callback lookups
+    orders.push({ ...orderData, id: savedOrderId })
 
     res.json({
       status: 'success',
-      orderId: orderId,
+      orderId: savedOrderId,
       message: 'Order created successfully',
-      data: {
-        orderId,
-        status: order.status,
-        total: order.pricing.total,
-        paymentMethod: order.paymentMethod
-      }
+      data: { orderId: savedOrderId, status: 'pending_payment', total: parseFloat(total), paymentMethod }
     })
   } catch (error) {
     console.error('Order creation error:', error)
-    res.status(500).json({
-      status: 'error',
-      message: 'Order creation failed'
-    })
+    res.status(500).json({ status: 'error', message: 'Order creation failed' })
   }
 })
 
 // Get Order Details
-router.get('/orders/:orderId', (req, res) => {
+router.get('/orders/:orderId', optionalAuth, async (req, res) => {
   try {
     const { orderId } = req.params
-    const order = orders.find(o => o.id === orderId)
-    
+    const order = await DatabaseService.findOrderById(orderId)
     if (!order) {
-      return res.status(404).json({
-        status: 'error',
-        message: 'Order not found'
-      })
+      // fallback to in-memory
+      const memOrder = orders.find(o => o.id === orderId || o.orderId === orderId)
+      if (!memOrder) return res.status(404).json({ status: 'error', message: 'Order not found' })
+      return res.json({ status: 'success', data: memOrder })
     }
-
-    // Include payment proof if exists
-    const paymentProof = paymentProofs.find(proof => proof.orderId === orderId)
-
-    res.json({
-      status: 'success',
-      data: {
-        ...order,
-        paymentProof: paymentProof || null
-      }
-    })
+    const paymentProof = await DatabaseService.findPaymentProofByOrderId(orderId)
+    res.json({ status: 'success', data: { ...(order.toObject ? order.toObject() : order), paymentProof: paymentProof || null } })
   } catch (error) {
     console.error('Get order error:', error)
-    res.status(500).json({
-      status: 'error',
-      message: 'Failed to retrieve order'
-    })
+    res.status(500).json({ status: 'error', message: 'Failed to retrieve order' })
   }
 })
 
 // Payment Proof Upload (metadata only - file handled by uploads route)
-router.post('/payment-proof', (req, res) => {
+router.post('/payment-proof', async (req, res) => {
   try {
-    const {
-      orderId,
-      transactionRef,
-      transactionDate,
-      bankId,
-      amount,
-      notes,
-      filename
-    } = req.body
+    const { orderId, transactionRef, transactionDate, bankId, amount, notes, filename } = req.body
 
-    // Validation
     if (!orderId || !transactionRef || !transactionDate) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Order ID, transaction reference, and transaction date are required'
-      })
+      return res.status(400).json({ status: 'error', message: 'Order ID, transaction reference, and transaction date are required' })
     }
 
-    // Find the order
-    const orderIndex = orders.findIndex(o => o.id === orderId)
-    if (orderIndex === -1) {
-      return res.status(404).json({
-        status: 'error',
-        message: 'Order not found'
-      })
-    }
-
-    // Validate transaction date
     const txDate = new Date(transactionDate)
-    const now = new Date()
-    if (txDate > now) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Transaction date cannot be in the future'
-      })
+    if (isNaN(txDate.getTime()) || txDate > new Date()) {
+      return res.status(400).json({ status: 'error', message: 'Invalid transaction date' })
     }
 
-    // Create payment proof record
-    const proofId = `PROOF${Date.now()}`
-    const paymentProof = {
-      id: proofId,
+    const proofData = {
       orderId,
       transactionRef: transactionRef.trim(),
       transactionDate,
-      bankId,
+      bankId: bankId || null,
       amount: amount ? parseFloat(amount) : null,
       notes: notes ? notes.trim() : '',
       filename: filename || null,
-      status: 'pending_verification',
-      uploadedAt: new Date().toISOString(),
-      verifiedAt: null,
-      verifiedBy: null,
-      verificationNotes: ''
+      status: 'pending_verification'
     }
 
-    paymentProofs.push(paymentProof)
+    const savedProof = await DatabaseService.createPaymentProof(proofData)
+    const proofId = savedProof._id || savedProof.id
 
     // Update order status
-    orders[orderIndex].status = 'payment_proof_uploaded'
-    orders[orderIndex].paymentProofId = proofId
-    orders[orderIndex].updatedAt = new Date().toISOString()
+    await DatabaseService.updateOrder(orderId, { status: 'payment_proof_uploaded', paymentProofId: proofId })
 
-    res.json({
-      status: 'success',
-      proofId: proofId,
-      message: 'Payment proof uploaded successfully',
-      data: {
-        proofId,
-        orderId,
-        status: 'pending_verification'
-      }
-    })
+    // Also update in-memory
+    const orderIndex = orders.findIndex(o => o.id === orderId || o.orderId === orderId)
+    if (orderIndex !== -1) {
+      orders[orderIndex].status = 'payment_proof_uploaded'
+      orders[orderIndex].paymentProofId = proofId
+    }
+
+    res.json({ status: 'success', proofId, message: 'Payment proof submitted successfully', data: { proofId, orderId, status: 'pending_verification' } })
   } catch (error) {
     console.error('Payment proof upload error:', error)
-    res.status(500).json({
-      status: 'error',
-      message: 'Payment proof upload failed'
-    })
+    res.status(500).json({ status: 'error', message: 'Payment proof upload failed' })
   }
 })
 
-// Get all orders (with pagination)
-router.get('/orders', (req, res) => {
+// Get orders — if authenticated, returns user's orders; otherwise all (for admin use)
+router.get('/orders', optionalAuth, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1
     const limit = parseInt(req.query.limit) || 10
-    const status = req.query.status
-    const paymentMethod = req.query.paymentMethod
 
-    let filteredOrders = [...orders]
-
-    // Apply filters
-    if (status) {
-      filteredOrders = filteredOrders.filter(order => order.status === status)
-    }
-    if (paymentMethod) {
-      filteredOrders = filteredOrders.filter(order => order.paymentMethod === paymentMethod)
+    const filters = {
+      status: req.query.status,
+      paymentMethod: req.query.paymentMethod
     }
 
-    // Sort by creation date (newest first)
-    filteredOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    // Filter by authenticated user's email
+    if (req.user && req.user.email) {
+      filters.search = req.user.email
+    }
+
+    const allOrders = await DatabaseService.getAllOrders(filters)
+
+    // If user is authenticated, filter to their orders only
+    let userOrders = allOrders
+    if (req.user && req.user.email) {
+      userOrders = allOrders.filter(o =>
+        o.customerInfo?.email?.toLowerCase() === req.user.email.toLowerCase()
+      )
+    }
+
+    // Sort newest first
+    userOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
 
     // Pagination
     const startIndex = (page - 1) * limit
-    const endIndex = startIndex + limit
-    const paginatedOrders = filteredOrders.slice(startIndex, endIndex)
+    const paginatedOrders = userOrders.slice(startIndex, startIndex + limit)
 
     res.json({
       status: 'success',
@@ -561,57 +525,37 @@ router.get('/orders', (req, res) => {
       pagination: {
         page,
         limit,
-        total: filteredOrders.length,
-        pages: Math.ceil(filteredOrders.length / limit)
+        total: userOrders.length,
+        pages: Math.ceil(userOrders.length / limit)
       }
     })
   } catch (error) {
     console.error('Get orders error:', error)
-    res.status(500).json({
-      status: 'error',
-      message: 'Failed to retrieve orders'
-    })
+    res.status(500).json({ status: 'error', message: 'Failed to retrieve orders' })
   }
 })
 
 // Get all payment proofs (with pagination)
-router.get('/payment-proofs', (req, res) => {
+router.get('/payment-proofs', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1
     const limit = parseInt(req.query.limit) || 10
-    const status = req.query.status
+    const filters = { status: req.query.status }
 
-    let filteredProofs = [...paymentProofs]
+    const allProofs = await DatabaseService.getAllPaymentProofs(filters)
+    allProofs.sort((a, b) => new Date(b.createdAt || b.uploadedAt) - new Date(a.createdAt || a.uploadedAt))
 
-    // Apply status filter
-    if (status) {
-      filteredProofs = filteredProofs.filter(proof => proof.status === status)
-    }
-
-    // Sort by upload date (newest first)
-    filteredProofs.sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt))
-
-    // Pagination
     const startIndex = (page - 1) * limit
-    const endIndex = startIndex + limit
-    const paginatedProofs = filteredProofs.slice(startIndex, endIndex)
+    const paginatedProofs = allProofs.slice(startIndex, startIndex + limit)
 
     res.json({
       status: 'success',
       data: paginatedProofs,
-      pagination: {
-        page,
-        limit,
-        total: filteredProofs.length,
-        pages: Math.ceil(filteredProofs.length / limit)
-      }
+      pagination: { page, limit, total: allProofs.length, pages: Math.ceil(allProofs.length / limit) }
     })
   } catch (error) {
     console.error('Get payment proofs error:', error)
-    res.status(500).json({
-      status: 'error',
-      message: 'Failed to retrieve payment proofs'
-    })
+    res.status(500).json({ status: 'error', message: 'Failed to retrieve payment proofs' })
   }
 })
 
